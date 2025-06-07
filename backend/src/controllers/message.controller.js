@@ -1,8 +1,12 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
+import OpenAI from "openai";
 
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+
+
+const token = process.env.GITHUB_PAT ;
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -66,5 +70,37 @@ export const sendMessage = async (req, res) => {
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const client = new OpenAI({
+  baseURL: "https://models.github.ai/inference",
+  apiKey: token,
+});
+
+export const handleChat = async (req, res) => {
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: "" },
+        { role: "user", content: message },
+      ],
+      model: "openai/gpt-4o",
+      temperature: 1,
+      max_tokens: 4096,
+      top_p: 1,
+    });
+
+    const reply = response.choices[0].message.content;
+    res.json({ reply });
+  } catch (err) {
+    console.error("Error calling model:", err.response?.data || err.message);
+    res.status(500).json({ error: "Something went wrong." });
   }
 };

@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isChatbotSelected: false, // NEW state to track chatbot selection
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -33,6 +34,7 @@ export const useChatStore = create((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
+
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
@@ -64,5 +66,15 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) =>
+    set({
+      selectedUser,
+      isChatbotSelected: false, // Selecting a user deselects chatbot
+    }),
+
+  setIsChatbotSelected: (value) =>
+    set({
+      selectedUser: null, // If chatbot is selected, no user should be selected
+      isChatbotSelected: value,
+    }),
 }));

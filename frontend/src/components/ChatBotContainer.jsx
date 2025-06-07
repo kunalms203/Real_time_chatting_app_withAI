@@ -1,0 +1,119 @@
+import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+
+const ChatBotContainer = () => {
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState([
+    { sender: "bot", text: "Hello! How can I help you today?", _id: "init" }
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messageEndRef = useRef(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage = { sender: "user", text: inputMessage, _id: Date.now().toString() };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5001/api/messages/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: inputMessage }),
+      });
+
+      if (!response.ok) throw new Error("Something went wrong!");
+
+      const data = await response.json();
+
+      const botMessage = { sender: "bot", text: data.reply, _id: Date.now().toString() + "_bot" };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error(error);
+      const errorMessage = { sender: "bot", text: "Sorry, something went wrong.", _id: Date.now().toString() + "_error" };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col flex-1 p-4 overflow-y-auto max-h-[600px] border rounded shadow-md">
+      <div className="text-center text-lg font-semibold text-base-content">
+        🤖 Hi! I'm your chatbot. Ask me anything!
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-base-300 rounded mt-4">
+        {messages.map((msg) => (
+          <div
+            key={msg._id}
+            className={`chat ${msg.sender === "user" ? "chat-end" : "chat-start"}`}
+          >
+            <div className="chat-image avatar">
+              <div className="w-10 rounded-full border">
+                <img
+                  src={msg.sender === "user" 
+                    ? "/user-avatar.png" 
+                    : "/bot-avatar.png"}
+                  alt={`${msg.sender} avatar`}
+                />
+              </div>
+            </div>
+            <div className="chat-bubble prose max-w-full">
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
+            </div>
+          </div>
+        ))}
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="chat chat-start">
+            <div className="chat-image avatar">
+              <div className="w-10 rounded-full border">
+                <img src="/bot-avatar.png" alt="bot avatar" />
+              </div>
+            </div>
+            <div className="chat-bubble italic text-gray-500">
+              ...
+            </div>
+          </div>
+        )}
+
+        <div ref={messageEndRef} />
+      </div>
+
+      <div className="mt-4 flex">
+        <input
+          type="text"
+          placeholder="Type your message here..."
+          className="flex-1 input input-bordered"
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+          disabled={isLoading}
+        />
+        <button
+          className="btn btn-primary ml-2"
+          onClick={handleSendMessage}
+          disabled={isLoading}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ChatBotContainer;
+
+
+
