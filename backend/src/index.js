@@ -20,10 +20,21 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://finalyearproject-updated.onrender.com"],
+    origin: "https://finalyearproject-updated.onrender.com",
     credentials: true,
   })
 );
+
+app.options("*", cors()); // 🔧 Explicit preflight handler
+
+// Optional fallback
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://finalyearproject-updated.onrender.com");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
