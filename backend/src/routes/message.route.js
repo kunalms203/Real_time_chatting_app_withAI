@@ -9,6 +9,6 @@ router.get("/:id", protectRoute, getMessages);
 
 router.post("/send/:id", protectRoute, sendMessage);
 
-router.post("/chat", handleChat);
+router.post("/chat/:id", protectRoute, handleChat);
 
 export default router;

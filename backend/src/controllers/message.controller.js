@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-import OpenAI from "openai";
+import MyAI from "openai";
+import AIMessage from "../models/aimessage.model.js";
 
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
@@ -73,9 +74,11 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-const client = new OpenAI({
+
+
+const client = new MyAI({
   baseURL: "https://models.github.ai/inference",
-  apiKey: token,
+  apiKey: process.env.GITHUB_PAT,
 });
 
 export const handleChat = async (req, res) => {
@@ -86,11 +89,32 @@ export const handleChat = async (req, res) => {
   }
 
   try {
+    // 1️⃣ Save the user's message in AIMessage collection
+    const userMessage = new AIMessage({
+      userId: req.user._id,
+      text: `act as users . this is message: ${message}`,
+      role: "user",
+    });
+    await userMessage.save();
+
+    // 2️⃣ Retrieve previous messages to build minimal context
+    const previousMessages = await AIMessage.find({ userId: req.user._id }).sort({ createdAt: 1 });
+
+    // 3️⃣ Format previous messages for OpenAI API
+    const formattedMessages = previousMessages.map((msg) => ({
+      role: msg.role,
+      content: msg.text,
+    }));
+
+    // 4️⃣ Add the new user message at the end (if not already included)
+    formattedMessages.push({
+      role: "user",
+      content: message,
+    });
+
+    // 5️⃣ Call the AI API
     const response = await client.chat.completions.create({
-      messages: [
-        { role: "system", content: "" },
-        { role: "user", content: message },
-      ],
+      messages: formattedMessages,
       model: "openai/gpt-4o",
       temperature: 1,
       max_tokens: 4096,
@@ -98,9 +122,19 @@ export const handleChat = async (req, res) => {
     });
 
     const reply = response.choices[0].message.content;
+
+    // 6️⃣ Save the AI's reply in AIMessage collection
+    const aiReply = new AIMessage({
+      userId: req.user._id,
+      text: reply,
+      role: "assistant",
+    });
+    await aiReply.save();
+
+    // 7️⃣ Send the reply back to the client
     res.json({ reply });
   } catch (err) {
-    console.error("Error calling model:", err.response?.data || err.message);
+    console.error("Error in handleChat:", err.response?.data || err.message);
     res.status(500).json({ error: "Something went wrong." });
   }
 };
