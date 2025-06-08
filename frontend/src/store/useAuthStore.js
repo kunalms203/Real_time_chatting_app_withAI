@@ -90,15 +90,27 @@ export const useAuthStore = create((set, get) => ({
       query: {
         userId: authUser._id,
       },
+      transports: ["websocket"], // ensure no fallback
+      withCredentials: true,     // send cookies with cross-origin
     });
-    socket.connect();
 
-    set({ socket: socket });
+    // No need for socket.connect()
+
+    set({ socket });
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+    });
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected:", socket.id);
+    });
   },
+
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
