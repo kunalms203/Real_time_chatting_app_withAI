@@ -73,7 +73,7 @@ const ChatBotContainer = () => {
                 <img
                   src={
                     msg.sender === "user"
-                      ? "/avatar.png"
+                      ? authUser.profilePic || "/avatar.png"
                       : "https://s39613.pcdn.co/wp-content/uploads/2023/01/mini-robot-work.jpg_s1024x1024wisk20cF8-TlXM20IIe1r6x06amK-2t8FbyDapuipEsf3l_jGs.jpg"
                   }
                   alt={`${msg.sender} avatar`}
