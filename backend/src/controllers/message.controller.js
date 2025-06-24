@@ -89,7 +89,7 @@ export const handleChat = async (req, res) => {
   }
 
   try {
-    // 1️⃣ Save the user's message in AIMessage collection
+    // Save the user's message in AIMessage collection
     const userMessage = new AIMessage({
       userId: req.user._id,
       text: `act as users . this is message: ${message}`,
@@ -97,22 +97,22 @@ export const handleChat = async (req, res) => {
     });
     await userMessage.save();
 
-    // 2️⃣ Retrieve previous messages to build minimal context
+    // Retrieve previous messages to build minimal context
     const previousMessages = await AIMessage.find({ userId: req.user._id }).sort({ createdAt: 1 });
 
-    // 3️⃣ Format previous messages for OpenAI API
+    // Format previous messages for OpenAI API
     const formattedMessages = previousMessages.map((msg) => ({
       role: msg.role,
       content: msg.text,
     }));
 
-    // 4️⃣ Add the new user message at the end (if not already included)
+    // Add the new user message at the end (if not already included)
     formattedMessages.push({
       role: "user",
       content: message,
     });
 
-    // 5️⃣ Call the AI API
+    // Call the AI API
     const response = await client.chat.completions.create({
       messages: formattedMessages,
       model: "openai/gpt-4o",
@@ -123,7 +123,7 @@ export const handleChat = async (req, res) => {
 
     const reply = response.choices[0].message.content;
 
-    // 6️⃣ Save the AI's reply in AIMessage collection
+    // Save the AI's reply in AIMessage collection
     const aiReply = new AIMessage({
       userId: req.user._id,
       text: reply,
@@ -131,7 +131,7 @@ export const handleChat = async (req, res) => {
     });
     await aiReply.save();
 
-    // 7️⃣ Send the reply back to the client
+    // Send the reply back to the client
     res.json({ reply });
   } catch (err) {
     console.error("Error in handleChat:", err.response?.data || err.message);

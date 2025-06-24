@@ -7,10 +7,14 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://finalyearproject-updated.onrender.com",
+    origin: [
+      "http://localhost:5173", // Vite dev server
+      "https://finalyearproject-updated.onrender.com", // Production frontend
+    ],
     credentials: true,
   },
 });
+
 
 
 export function getReceiverSocketId(userId) {

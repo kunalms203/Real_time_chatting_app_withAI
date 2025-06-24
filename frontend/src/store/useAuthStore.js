@@ -3,7 +3,11 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = "https://finalyearproject-updated-backend2.onrender.com";
+const BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:5001"
+    : "https://finalyearproject-updated-backend2.onrender.com";
+
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
