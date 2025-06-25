@@ -120,7 +120,7 @@ npm run dev
 
 ## 📷 Screenshot
 
-![Chat UI]([https://raw.githubusercontent.com/kunalms203/Real_time_chatting_app_withAI/refs/heads/master/Asset/Screenshot%20(44).png](https://raw.githubusercontent.com/kunalms203/Real_time_chatting_app_withAI/refs/heads/master/Asset/Screenshot%20(44).png))
+![Chat UI](https://raw.githubusercontent.com/kunalms203/Real_time_chatting_app_withAI/refs/heads/master/Asset/Screenshot%20(44).png)
 
 ---
 
